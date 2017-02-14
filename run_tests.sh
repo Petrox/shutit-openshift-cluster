@@ -22,6 +22,8 @@ then
 	OSE_VERSIONS='1.2 1.3 1.4'
 fi
 
+inject_compat_resource="false"
+
 #OK	
 #$SHUTIT build \
 #	--echo -d bash \
@@ -65,12 +67,15 @@ else
 			if [[ $ose_major_version == '1.4' ]]
 			then
 			        ose_version="1.4.1-1.el7"
+					inject_compat_resource="false"
 			elif [[ $ose_major_version == '1.3' ]]
 			then
 			        ose_version="1.3.3-1.el7"
+					inject_compat_resource="false"
 			elif [[ $ose_major_version == '1.2' ]]
 			then
 					ose_version="1.2.1-1.el7"
+					inject_compat_resource="true"
 			fi
 	
 			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_version:${cookbook_version}"
@@ -86,6 +91,7 @@ else
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  latest \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_compat_resource_cookbook_version latest \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_version                          12.16.42-1 \
+				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster inject_compat_resource                ${inject_compat_resource} \
 				"$@"
 			./destroy_vms.sh
 		done
