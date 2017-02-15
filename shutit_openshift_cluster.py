@@ -23,8 +23,6 @@ class shutit_openshift_cluster(ShutItModule):
 		vagrant_image = shutit.cfg[self.module_id]['vagrant_image']
 		vagrant_provider = shutit.cfg[self.module_id]['vagrant_provider']
 		gui = shutit.cfg[self.module_id]['gui']
-		# TODO: move config into machines?
-		memory = shutit.cfg[self.module_id]['memory']
 		# Collect the - expect machines dict to be set up here
 		test_config_module = importlib.import_module('tests.' + shutit.cfg[self.module_id]['test_config_dir'] + '.machines')
 		self_dir = os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda:0)))
@@ -109,17 +107,6 @@ class shutit_openshift_cluster(ShutItModule):
 		#shutit.pause_point('')
 		shutit.logout()
 		shutit.logout()
-
-		###############################################################################
-		# TODO: set up core services and do more in-depth tests
-		#shutit.send('git clone --depth=1 https://github.com/openshift/origin')
-		#shutit.send('cd origin/examples')
-		## TODO: https://github.com/openshift/origin/tree/master/examples/data-population
-		#shutit.send('cd data-population')
-		#shutit.send('ln -s /etc/origin openshift.local.config')
-		#shutit.send('./populate.sh')
-		###############################################################################
-
 		return True
 
 
@@ -127,8 +114,6 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'vagrant_image',default='centos/7')
 		shutit.get_config(self.module_id,'vagrant_provider',default='virtualbox')
 		shutit.get_config(self.module_id,'gui',default='false')
-		#shutit.get_config(self.module_id,'memory',default='1024')
-		shutit.get_config(self.module_id,'memory',default='512')
 		# Vagrantfile and environment files in here
 		shutit.get_config(self.module_id,'test_config_dir',default='multi_node_basic')
 		# To test different cookbook versions
