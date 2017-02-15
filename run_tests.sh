@@ -19,7 +19,7 @@ fi
 
 if [[ $OSE_VERSIONS = '' ]]
 then
-	OSE_VERSIONS='1.3 1.4'
+	OSE_VERSIONS='1.2 1.3 1.4'
 fi
 
 inject_compat_resource="false"
@@ -40,6 +40,12 @@ inject_compat_resource="false"
 #./destroy_vms.sh
 #exit 0
 
+# 4.0.0 is required by selinux_policy
+chef_yum_cookbook_version="4.0.0"
+chef_iptables_cookbook_version="latest"
+chef_selinux_policy_cookbook_version="latest"
+chef_compat_resource_cookbook_version="latest"
+inject_compat_resource="false"
 
 
 if [[ ${QUICK:-0} = '1' ]]
@@ -52,11 +58,12 @@ then
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.4.1-1.el7 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.4 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_version                      ${cookbook_version} \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_yum_cookbook_version             latest \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_iptables_cookbook_version        latest \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  latest \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_compat_resource_cookbook_version latest \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_yum_cookbook_version             ${chef_yum_cookbook_version} \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_iptables_cookbook_version        ${chef_iptables_cookbook_version} \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  ${chef_selinux_policy_cookbook_version} \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_compat_resource_cookbook_version ${chef_compat_resource_cookbook_version} \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_version                          12.16.42-1 \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster inject_compat_resource                ${inject_compat_resource} \
 		"$@"
 	./destroy_vms.sh
 else
@@ -67,27 +74,13 @@ else
 			if [[ $ose_major_version == '1.4' ]]
 			then
 			        ose_version="1.4.1-1.el7"
-					inject_compat_resource="false"
-					chef_yum_cookbook_version="latest"
-					chef_iptables_cookbook_version="latest"
-					chef_selinux_policy_cookbook_version="latest"
-					chef_compat_resource_cookbook_version="latest"
 			elif [[ $ose_major_version == '1.3' ]]
 			then
 			        ose_version="1.3.3-1.el7"
-					inject_compat_resource="false"
-					chef_yum_cookbook_version="latest"
-					chef_iptables_cookbook_version="latest"
-					chef_selinux_policy_cookbook_version="latest"
-					chef_compat_resource_cookbook_version="latest"
 			elif [[ $ose_major_version == '1.2' ]]
 			then
 					ose_version="1.2.1-1.el7"
 					inject_compat_resource="true"
-					chef_yum_cookbook_version="latest"
-					chef_iptables_cookbook_version="latest"
-					chef_selinux_policy_cookbook_version="latest"
-					chef_compat_resource_cookbook_version="latest"
 			fi
 	
 			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_version:${cookbook_version}"
