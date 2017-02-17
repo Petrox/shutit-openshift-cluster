@@ -128,6 +128,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'cookbook_branch',default='master')
 		shutit.get_config(self.module_id,'ose_version',default='1.4.1-1.el7')
 		shutit.get_config(self.module_id,'inject_compat_resource',default=False,boolean=True) 
+		shutit.get_config(self.module_id,'memory',default='512')
 		return True
 
 
