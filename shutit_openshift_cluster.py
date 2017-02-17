@@ -22,7 +22,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.log('''WARNING! IF THIS DOES NOT WORK YOU MAY NEED TO SET UP A 'secret' FILE IN THIS FOLDER!''',level=logging.CRITICAL)
 		vagrant_image = shutit.cfg[self.module_id]['vagrant_image']
 		vagrant_provider = shutit.cfg[self.module_id]['vagrant_provider']
-        memory = shutit.cfg[self.module_id]['memory']
+		memory = shutit.cfg[self.module_id]['memory']
 		gui = shutit.cfg[self.module_id]['gui']
 		# Collect the - expect machines dict to be set up here
 		test_config_module = importlib.import_module('tests.' + shutit.cfg[self.module_id]['test_config_dir'] + '.machines')
