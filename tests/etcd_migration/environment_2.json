@@ -7,8 +7,8 @@
   "name": "ocp-cluster-environment",
   "override_attributes": {
     "cookbook-openshift3": {
+      "etcd_add_additional_nodes": true,
       "etcd_servers": [
-        "etcd_add_additional_nodes": true,
         {
           "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
           "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}"
@@ -23,15 +23,18 @@
         },
         {
           "fqdn": "{{ test_config_module.machines['etcd1']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['etcd1']['ip'] }}"
+          "ipaddress": "{{ test_config_module.machines['etcd1']['ip'] }}",
+          "new_node": true
         },
         {
           "fqdn": "{{ test_config_module.machines['etcd2']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['etcd2']['ip'] }}"
+          "ipaddress": "{{ test_config_module.machines['etcd2']['ip'] }}",
+          "new_node": true
         },
         {
           "fqdn": "{{ test_config_module.machines['etcd3']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['etcd3']['ip'] }}"
+          "ipaddress": "{{ test_config_module.machines['etcd3']['ip'] }}",
+          "new_node": true
         }
       ],
       "master_servers": [
