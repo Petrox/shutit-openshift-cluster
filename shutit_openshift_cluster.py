@@ -102,7 +102,14 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
-		shutit.pause_point('migrate etcd')
+		for machine in test_config_module.machines.keys():
+			shutit.login(command='vagrant ssh ' + machine)
+			shutit.login(command='sudo su - ')
+			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_2.json').read())
+			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file')
+			shutit.logout()
+			shutit.logout()
+		shutit.pause_point('added etcd?')
 		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		#shutit.send_until('oc get pods | grep ^router-','.*Running.*',cadence=30)
 		#shutit.send_until('oc get pods | grep ^docker-registry-','.*Running.*',cadence=30)
@@ -119,7 +126,7 @@ class shutit_openshift_cluster(ShutItModule):
 		# Vagrantfile and environment files in here
 		shutit.get_config(self.module_id,'test_config_dir',default='multi_node_basic')
 		# To test different cookbook versions
-		shutit.get_config(self.module_id,'chef_yum_cookbook_version',default='latest')
+		shutit.get_config(self.module_id,'chef_yum_cookbook_version',default='4.0.0')
 		shutit.get_config(self.module_id,'chef_iptables_cookbook_version',default='latest')
 		shutit.get_config(self.module_id,'chef_selinux_policy_cookbook_version',default='latest')
 		shutit.get_config(self.module_id,'chef_compat_resource_cookbook_version',default='latest')
