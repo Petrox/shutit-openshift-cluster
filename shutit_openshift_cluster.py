@@ -108,6 +108,7 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
 		shutit.logout()
 		shutit.logout()
+		# 2) ADD NODES TO CLUSTER
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
@@ -115,11 +116,25 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file')
 			shutit.logout()
 			shutit.logout()
-		shutit.pause_point('added etcd?')
-		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
-		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
-		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
-		#shutit.pause_point('')
+		shutit.send('sleep 600 # WAIT 10 MINUTES',timeout=999)
+		# 3) REMOVE NODES FROM CLUSTER
+		for machine in test_config_module.machines.keys():
+			shutit.login(command='vagrant ssh ' + machine)
+			shutit.login(command='sudo su - ')
+			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_3.json').read())
+			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file to remove etcd nodes')
+			shutit.logout()
+			shutit.logout()
+		# 3) REMOVE NODES FROM CLUSTER
+		shutit.login(command='vagrant ssh master1')
+		shutit.login(command='sudo su - ')
+		shutit.send_until('oc get all || tail /root/chef-solo-example/logs/chef.log','.*kubernetes.*',cadence=60,note='Wait until oc get all returns OK')
+		for machine in test_config_module.machines.keys():
+			if test_config_module.machines[machine]['is_node']:
+				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
+		shutit.logout()
+		shutit.logout()
+		shutit.pause_point('removed etcd OK?')
 		shutit.logout()
 		shutit.logout()
 		return True
