@@ -1,0 +1,32 @@
+{
+  "name": "ocp-cluster-environment",
+  "description": "",
+  "cookbook_versions": {},
+  "json_class": "Chef::Environment",
+  "chef_type": "environment",
+  "default_attributes": {},
+  "override_attributes": {
+    "cookbook-openshift3": {
+      "ose_major_version": "{{ cfg['ose_major_version'] }}",
+      "master_servers": [
+        {
+          "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}"
+        }
+      ],
+      "node_servers": [
+        {
+          "fqdn": "{{ test_config_module.machines['node1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['node1']['ip'] }}",
+          "labels": "region=infra"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['node2']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['node2']['ip'] }}",
+          "labels": "region=user"
+        }
+      ],
+      "openshift_deployment_type": "origin"
+    }
+  }
+}
