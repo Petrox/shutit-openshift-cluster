@@ -58,10 +58,14 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send('rpm -i https://packages.chef.io/stable/el/7/chef-' + shutit.cfg[self.module_id]['chef_version'] + '.el7.x86_64.rpm',note='install chef')
 			shutit.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
 			shutit.send('cd /root/chef-solo-example/cookbooks')
-			shutit.send('git clone -b ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
+			shutit.send('git clone https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
+			shutit.send('cd cookbook-openshift3 && git checkout ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' && cd -',note='Checkout branch')
 			if shutit.cfg[self.module_id]['inject_compat_resource']:                                                                                                                           
 				shutit.send("""echo "depends 'compat_resource'" >> cookbook-openshift3/metadata.rb""") 
 			# Filthy hack to 'override' the node['ipaddress'] value
+			ip_addr = shutit.send_and_get_output("""ip -4 addr show dev eth1 | grep inet | awk '{print $2}' | awk -F/ '{print $1}'""")
+			shutit.send('''sed -i 's/#{node..ipaddress..}/''' + ip_addr + '''/g' /root/chef-solo-example/cookbooks/cookbook-openshift3/attributes/default.rb''')
+			shutit.send("""sed -i "s/node..ipaddress../'""" + ip_addr + """'/g" /root/chef-solo-example/cookbooks/cookbook-openshift3/attributes/default.rb""")
 			if shutit.cfg[self.module_id]['chef_iptables_cookbook_version'] == 'latest':
 				shutit.send('curl -L https://supermarket.chef.io/cookbooks/iptables/download | tar -zxvf -',note='Get cookbook dependencies')
 			else:
@@ -103,8 +107,8 @@ class shutit_openshift_cluster(ShutItModule):
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
 		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
-		#shutit.send_until('oc get pods | grep ^router-','.*Running.*',cadence=30)
-		#shutit.send_until('oc get pods | grep ^docker-registry-','.*Running.*',cadence=30)
+		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
+		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
 		#shutit.pause_point('')
 		shutit.logout()
 		shutit.logout()
