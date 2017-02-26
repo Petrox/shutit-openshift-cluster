@@ -1,43 +1,37 @@
-
 Vagrant.configure("2") do |config|
-  config.landrush.enabled = true
   config.vm.provider "virtualbox" do |vb|
-	vb.memory = "{{ cfg['memory'] }}"
+    vb.memory = "{{ cfg['memory'] }}"
   end
   config.vm.provider "libvirt" do |vb|
-	vb.memory = "{{ cfg['memory'] }}"
+    vb.memory = "{{ cfg['memory'] }}"
   end
 
-  config.vm.define "master1" do |master1|
-	master1.vm.box = "{{ vagrant_image }}"
-	master1.vm.hostname = "master1.vagrant.test"
-	master1.vm.provider :virtualbox do |v|
-	  v.customize ["modifyvm", :id, "--memory", "1024"]
-	  v.customize ["modifyvm", :id, "--cpus", "1"]
-	end
+  (1..3).each do |i|
+    config.vm.define "master#{i}" do |master|
+      master.vm.box = "{{ vagrant_image }}"
+      master.vm.hostname = "master#{i}"
+      master.vm.provider :libvirt do |v|
+        v.memory = 2048
+        v.cpus = 2
+      end
+      master.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--memory", "1024"]
+        v.customize ["modifyvm", :id, "--cpus", "1"]
+      end
+    end
   end
-  config.vm.define "master2" do |master2|
-	master2.vm.box = "{{ vagrant_image }}"
-	master2.vm.hostname = "master2.vagrant.test"
-	master2.vm.provider :virtualbox do |v|
-	  v.customize ["modifyvm", :id, "--memory", "1024"]
-	  v.customize ["modifyvm", :id, "--cpus", "1"]
-	end
-  end
-  config.vm.define "master3" do |master3|
-	master3.vm.box = "{{ vagrant_image }}"
-	master3.vm.hostname = "master3.vagrant.test"
-	master3.vm.provider :virtualbox do |v|
-	  v.customize ["modifyvm", :id, "--memory", "1024"]
-	  v.customize ["modifyvm", :id, "--cpus", "1"]
-	end
-  end
-  config.vm.define "node1" do |node1|
-	node1.vm.box = "{{ vagrant_image }}"
-	node1.vm.hostname = "node1.vagrant.test"
-	node1.vm.provider :virtualbox do |v|
-	  v.customize ["modifyvm", :id, "--memory", "512"]
-	  v.customize ["modifyvm", :id, "--cpus", "1"]
-	end
+  (1..3).each do |i|
+    config.vm.define "node#{i}" do |node|
+      node.vm.box = "{{ vagrant_image }}"
+      node.vm.hostname = "node#{i}"
+      node.vm.provider :libvirt do |v|
+        v.memory = 1024
+        v.cpus = 1
+      end
+      node.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--memory", "512"]
+        v.customize ["modifyvm", :id, "--cpus", "1"]
+      end
+    end
   end
 end

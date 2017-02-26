@@ -7,54 +7,28 @@
   "name": "ocp-cluster-environment",
   "override_attributes": {
     "cookbook-openshift3": {
+      "openshift_hosted_manage_registry": false,
+      "openshift_hosted_manage_router": false,
+      "deploy_containerized": true,
+      "openshift_docker_image_version": "{{ cfg['openshift_docker_image_version'] }}",
+      "ose_major_version": "{{ cfg['ose_major_version'] }}",
+      "deploy_example": false,
       "etcd_servers": [
         {
           "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
           "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}"
-        },
-        {
-          "fqdn": "{{ test_config_module.machines['master2']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['master2']['ip'] }}"
-        },
-        {
-          "fqdn": "{{ test_config_module.machines['master3']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['master3']['ip'] }}"
         }
       ],
       "master_servers": [
         {
           "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
           "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}"
-        },
-        {
-          "fqdn": "{{ test_config_module.machines['master2']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['master2']['ip'] }}"
-        },
-        {
-          "fqdn": "{{ test_config_module.machines['master3']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['master3']['ip'] }}"
         }
       ],
       "node_servers": [
         {
-          "fqdn": "{{ test_config_module.machines['node1']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['node1']['ip'] }}"
-        },
-        {
           "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
           "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}",
-          "labels": "region=infra",
-          "schedulable": true
-        },
-        {
-          "fqdn": "{{ test_config_module.machines['master2']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['master2']['ip'] }}",
-          "labels": "region=infra",
-          "schedulable": true
-        },
-        {
-          "fqdn": "{{ test_config_module.machines['master3']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['master3']['ip'] }}",
           "labels": "region=infra",
           "schedulable": true
         }

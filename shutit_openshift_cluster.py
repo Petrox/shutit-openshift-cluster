@@ -31,8 +31,6 @@ class shutit_openshift_cluster(ShutItModule):
 		run_dir = shutit.cfg[self.module_id]['vagrant_run_dir']
 		module_name = 'shutit_openshift_cluster_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
-		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
-			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
 		shutit.multisend('vagrant init ' + vagrant_image,{'assword':pw})
 		template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/Vagrantfile').read())
 		shutit.send_file(run_dir + '/' + module_name + '/Vagrantfile',str(template.render(vagrant_image=vagrant_image,cfg=shutit.cfg[self.module_id])))
@@ -42,19 +40,15 @@ class shutit_openshift_cluster(ShutItModule):
 		# SET UP MACHINES AND START CLUSTER
 		###############################################################################
 		for machine in sorted(test_config_module.machines.keys()):
-			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
+			ip = shutit.send_and_get_output('''vagrant ssh-config ''' + test_config_module.machines[machine]['fqdn'] + ''' 2> /dev/null | awk '/HostName/ {print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
-			shutit.send('''sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf''',note='Switch off fastest mirror - it gives me nothing but grief (looooong waits')
-			shutit.send('rm -fr /var/cache/yum/*')
-			shutit.send('yum clean all')
-			shutit.install('xterm')
-			shutit.install('net-tools')
+			shutit.send('yum update -y')
 			shutit.install('git')
+			shutit.install('docker')
 			# Allow logins via ssh between machines
-			shutit.send('echo root:origin | /usr/sbin/chpasswd',note='set root password')
 			shutit.send('rpm -i https://packages.chef.io/stable/el/7/chef-' + shutit.cfg[self.module_id]['chef_version'] + '.el7.x86_64.rpm',note='install chef')
 			shutit.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
 			shutit.send('cd /root/chef-solo-example/cookbooks')
@@ -90,7 +84,7 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
-			shutit.send('echo "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)	
+                        shutit.send('nohup chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb &',note='set up crontab on ' + machine)
 			shutit.logout()
 			shutit.logout()
 	
@@ -98,42 +92,13 @@ class shutit_openshift_cluster(ShutItModule):
 		# 1) CHECK NODES COME UP	
 		shutit.login(command='vagrant ssh master1')
 		shutit.login(command='sudo su - ')
-		shutit.send_until('oc get all || tail /root/chef-solo-example/logs/chef.log','.*kubernetes.*',cadence=60,note='Wait until oc get all returns OK')
+		shutit.send_until('oc get all || tail /root/nohup.out','.*kubernetes.*',cadence=60,note='Wait until oc get all returns OK')
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
 		shutit.logout()
 		shutit.logout()
-		# 2) ADD NODES TO CLUSTER
-		for machine in test_config_module.machines.keys():
-			shutit.login(command='vagrant ssh ' + machine)
-			shutit.login(command='sudo su - ')
-			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_2.json').read())
-			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file')
-			shutit.logout()
-			shutit.logout()
-		shutit.send('sleep 600 # WAIT 10 MINUTES',timeout=999)
-		# 3) REMOVE NODES FROM CLUSTER
-		for machine in test_config_module.machines.keys():
-			shutit.login(command='vagrant ssh ' + machine)
-			shutit.login(command='sudo su - ')
-			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_3.json').read())
-			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file to remove etcd nodes')
-			shutit.logout()
-			shutit.logout()
-		# 3) REMOVE NODES FROM CLUSTER
-		shutit.login(command='vagrant ssh master1')
-		shutit.login(command='sudo su - ')
-		shutit.send_until('oc get all || tail /root/chef-solo-example/logs/chef.log','.*kubernetes.*',cadence=60,note='Wait until oc get all returns OK')
-		for machine in test_config_module.machines.keys():
-			if test_config_module.machines[machine]['is_node']:
-				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
-		shutit.logout()
-		shutit.logout()
-		shutit.pause_point('removed etcd OK?')
-		#shutit.send_until('oc get pods | grep ^router-','.*Running.*',cadence=30)
-		#shutit.send_until('oc get pods | grep ^docker-registry-','.*Running.*',cadence=30)
-		#shutit.pause_point('')
+		shutit.pause_point('Deployment OK?')
 		shutit.logout()
 		shutit.logout()
 		return True
@@ -141,7 +106,7 @@ class shutit_openshift_cluster(ShutItModule):
 
 	def get_config(self, shutit):
 		shutit.get_config(self.module_id,'vagrant_image',default='centos/7')
-		shutit.get_config(self.module_id,'vagrant_provider',default='virtualbox')
+		shutit.get_config(self.module_id,'vagrant_provider',default='libvirt')
 		shutit.get_config(self.module_id,'gui',default='false')
 		# Vagrantfile and environment files in here
 		shutit.get_config(self.module_id,'test_config_dir',default='multi_node_basic')
@@ -155,6 +120,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'ose_major_version',default='1.4')
 		shutit.get_config(self.module_id,'cookbook_branch',default='master')
 		shutit.get_config(self.module_id,'ose_version',default='1.4.1-1.el7')
+		shutit.get_config(self.module_id,'openshift_docker_image_version',default='v1.4.1')
 		shutit.get_config(self.module_id,'inject_compat_resource',default=False,boolean=True) 
 		shutit.get_config(self.module_id,'memory',default='512')
 		return True

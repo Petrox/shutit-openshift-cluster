@@ -1,5 +1,4 @@
 #!/bin/bash
-rm -rf vagrant_run/*
 if [[ $(command -v VBoxManage) != '' ]]
 then
 	while true
@@ -17,8 +16,11 @@ then
 fi
 if [[ $(command -v virsh) != '' ]]
 then
-	if [[ $(kvm-ok 2>&1 | command grep 'can be used') != '' ]]
-	then
-	    virsh list | grep shutit_openshift_cluster | awk '{print $1}' | xargs -n1 virsh destroy
-	fi
+	for machine in $(virsh -c qemu:///system list | grep shutit_openshift_cluster | awk '{print $2}')
+ 	do
+        	virsh -c qemu:///system destroy $machine 
+        	virsh -c qemu:///system undefine $machine --remove-all-storage --nvram
+	done
+	[ -d vagrant_run/*/ ] && (cd vagrant_run/*/ && vagrant destroy -f &> /dev/null) || true
 fi
+rm -rf vagrant_run/*
