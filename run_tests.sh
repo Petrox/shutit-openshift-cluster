@@ -101,3 +101,10 @@ $SHUTIT build \
     "$@"
 ./destroy_vms.sh
 
+cd ..
+git clone --recursive https://github.com/IshentRas/cookbook-openshift3
+cd cookbook-openshift3
+git checkout ${GIT_BRANCH##origin/}
+kitchen converge
+kitchen verify
+kitchen destroy
