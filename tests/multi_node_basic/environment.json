@@ -9,8 +9,6 @@
     "cookbook-openshift3": {
       "openshift_hosted_manage_registry": false,
       "openshift_hosted_manage_router": false,
-      "deploy_containerized": true,
-      "openshift_docker_image_version": "{{ cfg['openshift_docker_image_version'] }}",
       "ose_major_version": "{{ cfg['ose_major_version'] }}",
       "deploy_example": false,
       "etcd_servers": [

@@ -45,9 +45,7 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
-			shutit.send('yum update -y')
 			shutit.install('git')
-			shutit.install('docker')
 			# Allow logins via ssh between machines
 			shutit.send('rpm -i https://packages.chef.io/stable/el/7/chef-' + shutit.cfg[self.module_id]['chef_version'] + '.el7.x86_64.rpm',note='install chef')
 			shutit.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
@@ -92,10 +90,10 @@ class shutit_openshift_cluster(ShutItModule):
 		# 1) CHECK NODES COME UP	
 		shutit.login(command='vagrant ssh master1')
 		shutit.login(command='sudo su - ')
-		shutit.send_until('oc get all || tail /root/nohup.out','.*kubernetes.*',cadence=60,note='Wait until oc get all returns OK')
+		shutit.send_until('oc get all || tail /root/nohup.out','.*kubernetes.*',cadence=20,note='Wait until oc get all returns OK')
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
-				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
+				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=20,note='Wait until oc get all returns OK')
 		shutit.logout()
 		shutit.logout()
 		shutit.pause_point('Deployment OK?')
