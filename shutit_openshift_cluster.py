@@ -82,7 +82,7 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
-                        shutit.send('nohup chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb &',note='set up crontab on ' + machine)
+                        shutit.send('nohup chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb --force-formatter &',note='set up crontab on ' + machine)
 			shutit.logout()
 			shutit.logout()
 	
