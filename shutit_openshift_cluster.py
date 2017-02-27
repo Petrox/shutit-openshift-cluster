@@ -152,7 +152,7 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
 		shutit.logout()
 		shutit.logout()
-		shutit.pause_point('removed etcd OK?')
+		shutit.pause_point('reprovision certs?')
 		shutit.logout()
 		shutit.logout()
 		return True
