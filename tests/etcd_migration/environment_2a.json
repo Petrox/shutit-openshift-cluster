@@ -1,0 +1,75 @@
+{
+  "chef_type": "environment",
+  "cookbook_versions": {},
+  "default_attributes": {},
+  "description": "",
+  "json_class": "Chef::Environment",
+  "name": "ocp-cluster-environment",
+  "override_attributes": {
+    "cookbook-openshift3": {
+      "etcd_add_additional_nodes": true,
+      "etcd_servers": [
+        {
+          "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master2']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master2']['ip'] }}"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master3']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master3']['ip'] }}"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['etcd1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['etcd1']['ip'] }}",
+          "new_node": true
+        }
+      ],
+      "master_servers": [
+        {
+          "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master2']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master2']['ip'] }}"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master3']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master3']['ip'] }}"
+        }
+      ],
+      "node_servers": [
+        {
+          "fqdn": "{{ test_config_module.machines['node1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['node1']['ip'] }}"
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}",
+          "labels": "region=infra",
+          "schedulable": true
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master2']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master2']['ip'] }}",
+          "labels": "region=infra",
+          "schedulable": true
+        },
+        {
+          "fqdn": "{{ test_config_module.machines['master3']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['master3']['ip'] }}",
+          "labels": "region=infra",
+          "schedulable": true
+        }
+      ],
+      "openshift_HA": true,
+      "openshift_cluster_name": "{{ test_config_module.machines['master1']['fqdn'] }}",
+      "openshift_deployment_type": "origin",
+      "ose_major_version": "{{ cfg['ose_major_version'] }}",
+      "ose_version": "{{ cfg['ose_version'] }}"
+    }
+  }
+}

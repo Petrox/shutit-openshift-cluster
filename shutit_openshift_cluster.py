@@ -58,10 +58,14 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send('rpm -i https://packages.chef.io/stable/el/7/chef-' + shutit.cfg[self.module_id]['chef_version'] + '.el7.x86_64.rpm',note='install chef')
 			shutit.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
 			shutit.send('cd /root/chef-solo-example/cookbooks')
-			shutit.send('git clone -b ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
+			shutit.send('git clone https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
+			shutit.send('cd cookbook-openshift3 && git checkout ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' && cd -',note='Checkout branch')
 			if shutit.cfg[self.module_id]['inject_compat_resource']:                                                                                                                           
 				shutit.send("""echo "depends 'compat_resource'" >> cookbook-openshift3/metadata.rb""") 
 			# Filthy hack to 'override' the node['ipaddress'] value
+			ip_addr = shutit.send_and_get_output("""ip -4 addr show dev eth1 | grep inet | awk '{print $2}' | awk -F/ '{print $1}'""")
+			shutit.send('''sed -i 's/#{node..ipaddress..}/''' + ip_addr + '''/g' /root/chef-solo-example/cookbooks/cookbook-openshift3/attributes/default.rb''')
+			shutit.send("""sed -i "s/node..ipaddress../'""" + ip_addr + """'/g" /root/chef-solo-example/cookbooks/cookbook-openshift3/attributes/default.rb""")
 			if shutit.cfg[self.module_id]['chef_iptables_cookbook_version'] == 'latest':
 				shutit.send('curl -L https://supermarket.chef.io/cookbooks/iptables/download | tar -zxvf -',note='Get cookbook dependencies')
 			else:
@@ -104,11 +108,29 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
 		shutit.logout()
 		shutit.logout()
-		# 2) ADD NODES TO CLUSTER
+		# 2a) ADD NODE1 TO CLUSTER
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
-			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_2.json').read())
+			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_2a.json').read())
+			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file')
+			shutit.logout()
+			shutit.logout()
+		shutit.send('sleep 600 # WAIT 10 MINUTES',timeout=999)
+		# 2b) ADD NODE2 TO CLUSTER
+		for machine in test_config_module.machines.keys():
+			shutit.login(command='vagrant ssh ' + machine)
+			shutit.login(command='sudo su - ')
+			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_2b.json').read())
+			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file')
+			shutit.logout()
+			shutit.logout()
+		shutit.send('sleep 600 # WAIT 10 MINUTES',timeout=999)
+		# 2c) ADD NODE3 TO CLUSTER
+		for machine in test_config_module.machines.keys():
+			shutit.login(command='vagrant ssh ' + machine)
+			shutit.login(command='sudo su - ')
+			template = jinja2.Template(file(self_dir + '/tests/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment_2c.json').read())
 			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file')
 			shutit.logout()
 			shutit.logout()
@@ -131,9 +153,6 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.logout()
 		shutit.logout()
 		shutit.pause_point('removed etcd OK?')
-		#shutit.send_until('oc get pods | grep ^router-','.*Running.*',cadence=30)
-		#shutit.send_until('oc get pods | grep ^docker-registry-','.*Running.*',cadence=30)
-		#shutit.pause_point('')
 		shutit.logout()
 		shutit.logout()
 		return True

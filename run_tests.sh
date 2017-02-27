@@ -10,11 +10,11 @@ then
 	exit 1
 fi
 
-if [[ $COOKBOOK_VERSION != '' ]]
+if [[ $COOKBOOK_BRANCH != '' ]]
 then
-	cookbook_version="${COOKBOOK_VERSION}"
+	cookbook_branch="${COOKBOOK_BRANCH}"
 else
-	cookbook_version="master"
+	cookbook_branch="master"
 fi
 
 if [[ $OSE_VERSIONS = '' ]]
@@ -38,7 +38,7 @@ then
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       multi_node_basic \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.4.1-1.el7 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.4 \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_version                      ${cookbook_version} \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       ${cookbook_branch} \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_yum_cookbook_version             ${chef_yum_cookbook_version} \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_iptables_cookbook_version        ${chef_iptables_cookbook_version} \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  ${chef_selinux_policy_cookbook_version} \
@@ -64,14 +64,14 @@ else
 					inject_compat_resource="true"
 			fi
 	
-			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_version:${cookbook_version}"
+			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_branch:${cookbook_branch}"
 			$SHUTIT build \
 				--echo -d bash \
 				-m shutit-library/vagrant:shutit-library/virtualbox \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       ${test_dir} \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           ${ose_version} \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     ${ose_major_version} \
-				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_version                      ${cookbook_version} \
+				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       ${cookbook_branch} \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_yum_cookbook_version             ${chef_yum_cookbook_version} \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_iptables_cookbook_version        ${chef_iptables_cookbook_version} \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  ${chef_selinux_policy_cookbook_version} \
@@ -91,6 +91,7 @@ $SHUTIT build \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       multi_node_basic \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.2.1-1.el7 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.2 \
+	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       master \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_yum_cookbook_version             3.6.1 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_iptables_cookbook_version        1.0.0 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  0.7.2 \
@@ -100,3 +101,10 @@ $SHUTIT build \
     "$@"
 ./destroy_vms.sh
 
+cd ..
+git clone --recursive https://github.com/IshentRas/cookbook-openshift3
+cd cookbook-openshift3
+git checkout ${GIT_BRANCH##origin/}
+kitchen converge
+kitchen verify
+kitchen destroy
