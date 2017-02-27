@@ -79,7 +79,9 @@
       "openshift_cluster_name": "{{ test_config_module.machines['master1']['fqdn'] }}",
       "openshift_deployment_type": "origin",
       "ose_major_version": "{{ cfg['ose_major_version'] }}",
-      "ose_version": "{{ cfg['ose_version'] }}"
+      "ose_version": "{{ cfg['ose_version'] }}",
+      "openshift_hosted_managed_router": false,
+      "openshift_hosted_managed_registry": false
     }
   }
 }
