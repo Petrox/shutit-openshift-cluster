@@ -143,7 +143,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file to remove etcd nodes')
 			shutit.logout()
 			shutit.logout()
-		# 3) REMOVE NODES FROM CLUSTER
+		# CHECK ALL OK
 		shutit.login(command='vagrant ssh master1')
 		shutit.login(command='sudo su - ')
 		shutit.send_until('oc get all || tail /root/chef-solo-example/logs/chef.log','.*kubernetes.*',cadence=60,note='Wait until oc get all returns OK')
