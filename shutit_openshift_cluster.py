@@ -143,6 +143,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Update environment file to remove etcd nodes')
 			shutit.logout()
 			shutit.logout()
+
 		# CHECK ALL OK
 		shutit.login(command='vagrant ssh master1')
 		shutit.login(command='sudo su - ')
@@ -150,11 +151,20 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
+				shutit.pause_point('does oc work here? if so why?')
 		shutit.logout()
 		shutit.logout()
-		shutit.pause_point('reprovision certs?')
+
+		for machine in test_config_module.machines.keys():
+			shutit.login(command='vagrant ssh ' + machine)
+			shutit.login(command='sudo su - ')
+			shutit.send('echo "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3::adhoc_redeploy_certificates],recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)	
+			shutit.logout()
+			shutit.logout()
+		shutit.send('sleep 720 # WAIT 12 MINUTES',timeout=999)
 		shutit.logout()
 		shutit.logout()
+		shutit.pause_point('All reprovisioned ok?')
 		return True
 
 
