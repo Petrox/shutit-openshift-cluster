@@ -100,14 +100,3 @@ $SHUTIT build \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster inject_compat_resource                true \
     "$@"
 ./destroy_vms.sh
-
-cd ..
-git clone --recursive https://github.com/IshentRas/cookbook-openshift3
-cd cookbook-openshift3
-git checkout ${GIT_BRANCH##origin/}
-for i in $(kitchen list -b)
-do
-	kitchen converge $i
-	kitchen verify $i
-	kitchen destroy $i
-done
