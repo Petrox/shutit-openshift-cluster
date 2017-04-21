@@ -19,7 +19,7 @@ fi
 
 if [[ $OSE_VERSIONS = '' ]]
 then
-	OSE_VERSIONS='1.2 1.3 1.4'
+	OSE_VERSIONS='1.3 1.4'
 fi
 
 # 4.0.0 is required by selinux_policy, latest yum is now 5.0.0
@@ -59,10 +59,6 @@ else
 			elif [[ $ose_major_version == '1.3' ]]
 			then
 			        ose_version="1.3.3-1.el7"
-			elif [[ $ose_major_version == '1.2' ]]
-			then
-					ose_version="1.2.1-1.el7"
-					inject_compat_resource="true"
 			fi
 	
 			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_branch:${cookbook_branch}"
