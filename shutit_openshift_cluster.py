@@ -31,7 +31,7 @@ class shutit_openshift_cluster(ShutItModule):
 		self_dir = os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda:0)))
 		shutit.cfg[self.module_id]['vagrant_run_dir'] = self_dir + '/vagrant_run'
 		run_dir = shutit.cfg[self.module_id]['vagrant_run_dir']
-		module_name = shutit.cfg['cluster_vm_names'] + '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
+		module_name = shutit.cfg[self.module_id]['cluster_vm_names'] + '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
 		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
 			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
@@ -122,7 +122,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'vagrant_provider',default='virtualbox')
 		shutit.get_config(self.module_id,'gui',default='false')
 		# Vagrantfile and environment files in here
-		shutit.get_config(self.module_id,'test_config_dir',default='multi_node_basic')
+		shutit.get_config(self.module_id,'test_config_dir',default='test_multi_node_basic')
 		# To test different cookbook versions
 		shutit.get_config(self.module_id,'chef_yum_cookbook_version',default='latest')
 		shutit.get_config(self.module_id,'chef_iptables_cookbook_version',default='latest')
