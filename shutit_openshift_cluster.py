@@ -20,6 +20,8 @@ class shutit_openshift_cluster(ShutItModule):
 			pw = ''
 		if pw == '':
 			shutit.log('''WARNING! IF THIS DOES NOT WORK YOU MAY NEED TO SET UP A 'secret' FILE IN THIS FOLDER!''',level=logging.CRITICAL)
+			import time
+			time.sleep(10)
 		vagrant_image = shutit.cfg[self.module_id]['vagrant_image']
 		vagrant_provider = shutit.cfg[self.module_id]['vagrant_provider']
 		memory = shutit.cfg[self.module_id]['memory']
@@ -58,7 +60,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send('rpm -i https://packages.chef.io/stable/el/7/chef-' + shutit.cfg[self.module_id]['chef_version'] + '.el7.x86_64.rpm',note='install chef')
 			shutit.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
 			shutit.send('cd /root/chef-solo-example/cookbooks')
-			shutit.send('git clone https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
+			shutit.send('git clone -b ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
 			shutit.send('cd cookbook-openshift3 && git checkout ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' && cd -',note='Checkout branch')
 			if shutit.cfg[self.module_id]['inject_compat_resource']:                                                                                                                           
 				shutit.send("""echo "depends 'compat_resource'" >> cookbook-openshift3/metadata.rb""") 
@@ -109,6 +111,7 @@ class shutit_openshift_cluster(ShutItModule):
 		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
+		shutit.pause_point('do upgrade')
 		shutit.logout()
 		shutit.logout()
 		return True
