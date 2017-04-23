@@ -38,4 +38,5 @@ $SHUTIT build \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_compat_resource_cookbook_version ${chef_compat_resource_cookbook_version} \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_version                          12.16.42-1 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster inject_compat_resource                ${inject_compat_resource} \
+	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cluster_vm_names                      prod_rothko_openshift \
 	"$@"

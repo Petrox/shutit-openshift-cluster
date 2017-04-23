@@ -27,11 +27,11 @@ class shutit_openshift_cluster(ShutItModule):
 		memory = shutit.cfg[self.module_id]['memory']
 		gui = shutit.cfg[self.module_id]['gui']
 		# Collect the - expect machines dict to be set up here
-		test_config_module = importlib.import_module('tests.' + shutit.cfg[self.module_id]['test_config_dir'] + '.machines')
+		test_config_module = importlib.import_module('cluster_configs.' + shutit.cfg[self.module_id]['test_config_dir'] + '.machines')
 		self_dir = os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda:0)))
 		shutit.cfg[self.module_id]['vagrant_run_dir'] = self_dir + '/vagrant_run'
 		run_dir = shutit.cfg[self.module_id]['vagrant_run_dir']
-		module_name = 'shutit_openshift_cluster_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
+		module_name = shutit.cfg['cluster_vm_names'] + '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
 		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
 			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
@@ -135,6 +135,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'ose_version',default='1.4.1-1.el7')
 		shutit.get_config(self.module_id,'inject_compat_resource',default=False,boolean=True) 
 		shutit.get_config(self.module_id,'memory',default='512')
+		shutit.get_config(self.module_id,'cluster_vm_names',default='shutit_openshift_cluster')
 		return True
 
 
