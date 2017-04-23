@@ -51,7 +51,7 @@ then
 else
 	for ose_major_version in ${OSE_VERSIONS}
 	do
-		for test_dir in $(cd tests && find * -type d && cd - > /dev/null)
+		for test_dir in $(cd tests && find * -type d | grep ^test && cd - > /dev/null)
 		do
 			if [[ $ose_major_version == '1.4' ]]
 			then
