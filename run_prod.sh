@@ -39,4 +39,3 @@ $SHUTIT build \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_version                          12.16.42-1 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster inject_compat_resource                ${inject_compat_resource} \
 	"$@"
-./destroy_vms.sh
