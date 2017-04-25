@@ -37,6 +37,10 @@
           "ipaddress": "{{ test_config_module.machines['node1']['ip'] }}"
         },
         {
+          "fqdn": "{{ test_config_module.machines['node2']['fqdn'] }}",
+          "ipaddress": "{{ test_config_module.machines['node2']['ip'] }}"
+        },
+        {
           "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
           "ipaddress": "{{ test_config_module.machines['master1']['ip'] }}",
           "labels": "region=infra",
