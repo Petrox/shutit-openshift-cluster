@@ -36,7 +36,7 @@ then
 		-l debug \
 		--echo -d bash \
 		-m shutit-library/vagrant:shutit-library/virtualbox \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       prod_multi_node_basic \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_single_master_embedded_etcd \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.4.1-1.el7 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.4 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       ${cookbook_branch} \
@@ -87,7 +87,7 @@ $SHUTIT build \
 	--echo -d bash \
 	-l debug \
 	-m shutit-library/vagrant:shutit-library/virtualbox \
-	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       multi_node_basic \
+	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       multi_node_separate_etcd \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.2.1-1.el7 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.2 \
 	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       master \
