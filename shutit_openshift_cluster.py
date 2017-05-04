@@ -111,7 +111,6 @@ class shutit_openshift_cluster(ShutItModule):
 		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
-		shutit.pause_point('')
 		shutit.logout()
 		shutit.logout()
 		return True
