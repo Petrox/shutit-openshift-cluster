@@ -108,8 +108,8 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
-		shutit.logout(command='vagrant ssh master1')
-		shutit.logout(command='sudo su - ')
+		shutit.logout()
+		shutit.logout()
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su -',password='vagrant')
