@@ -108,6 +108,8 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
+		shutit.logout(command='vagrant ssh master1')
+		shutit.logout(command='sudo su - ')
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su -',password='vagrant')
@@ -119,6 +121,11 @@ class shutit_openshift_cluster(ShutItModule):
   "dns": ["8.8.8.8"]
 }""",note='Use the google dns server rather than the vagrant one. Change to the value you want if this does not work, eg if google dns is blocked.')
 			shutit.send('systemctl daemon-reload && systemctl restart docker')
+			shutit.logout()
+			shutit.logout()
+		# CHECK APPS
+		shutit.login(command='vagrant ssh master1')
+		shutit.login(command='sudo su - ')
 		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
