@@ -62,8 +62,8 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send('cd /root/chef-solo-example/cookbooks')
 			shutit.send('git clone -b ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
 			shutit.send('cd cookbook-openshift3 && git checkout ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' && cd -',note='Checkout branch')
-			if shutit.cfg[self.module_id]['inject_compat_resource']:                                                                                                                           
-				shutit.send("""echo "depends 'compat_resource'" >> cookbook-openshift3/metadata.rb""") 
+			if shutit.cfg[self.module_id]['inject_compat_resource']:
+				shutit.send("""echo "depends 'compat_resource'" >> cookbook-openshift3/metadata.rb""")
 			# Filthy hack to 'override' the node['ipaddress'] value
 			ip_addr = shutit.send_and_get_output("""ip -4 addr show dev eth1 | grep inet | awk '{print $2}' | awk -F/ '{print $1}'""")
 			shutit.send('''sed -i 's/#{node..ipaddress..}/''' + ip_addr + '''/g' /root/chef-solo-example/cookbooks/cookbook-openshift3/attributes/default.rb''')
@@ -108,6 +108,17 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
+		for machine in test_config_module.machines.keys():
+			shutit.login(command='vagrant ssh ' + machine)
+			shutit.login(command='sudo su -',password='vagrant')
+			# Workaround for docker networking issues + landrush.
+			shutit.install('docker')
+			shutit.insert_text('Environment=GODEBUG=netdns=cgo','/lib/systemd/system/docker.service',pattern='.Service.')
+			shutit.send('mkdir -p /etc/docker',note='Create the docker config folder')
+			shutit.send_file('/etc/docker/daemon.json',"""{
+  "dns": ["8.8.8.8"]
+}""",note='Use the google dns server rather than the vagrant one. Change to the value you want if this does not work, eg if google dns is blocked.')
+			shutit.send('systemctl daemon-reload && systemctl restart docker')
 		# Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
@@ -132,7 +143,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'ose_major_version',default='1.4')
 		shutit.get_config(self.module_id,'cookbook_branch',default='master')
 		shutit.get_config(self.module_id,'ose_version',default='1.4.1-1.el7')
-		shutit.get_config(self.module_id,'inject_compat_resource',default=False,boolean=True) 
+		shutit.get_config(self.module_id,'inject_compat_resource',default=False,boolean=True)
 		shutit.get_config(self.module_id,'memory',default='512')
 		shutit.get_config(self.module_id,'cluster_vm_names',default='shutit_openshift_cluster')
 		return True
