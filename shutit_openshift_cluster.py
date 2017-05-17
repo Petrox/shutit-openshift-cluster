@@ -62,7 +62,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send('cd /root/chef-solo-example/cookbooks')
 			shutit.send('git clone -b ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' https://github.com/IshentRas/cookbook-openshift3',note='Clone chef repo')
 			shutit.send('cd cookbook-openshift3 && git checkout ' + shutit.cfg[self.module_id]['cookbook_branch'] + ' && cd -',note='Checkout branch')
-			# Test json validity
+			# Test json validity in github code
 			shutit.send(r"""find . | grep json$ | sed 's/.*/echo \0 && cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
 			if shutit.cfg[self.module_id]['inject_compat_resource']:
 				shutit.send("""echo "depends 'compat_resource'" >> cookbook-openshift3/metadata.rb""")
@@ -110,6 +110,7 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in test_config_module.machines.keys():
 			if test_config_module.machines[machine]['is_node']:
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
+				
 		shutit.logout()
 		shutit.logout()
 		for machine in test_config_module.machines.keys():
@@ -128,7 +129,9 @@ class shutit_openshift_cluster(ShutItModule):
 		# CHECK APPS
 		shutit.login(command='vagrant ssh master1')
 		shutit.login(command='sudo su - ')
-		shutit.pause_point('')
+		# Test json validity in json on server
+		shutit.send(r"""find / | grep json$ | sed 's/.*/echo \0 && cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
+		#shutit.pause_point('')
 		## Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		#shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		#shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
