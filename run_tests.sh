@@ -51,7 +51,7 @@ then
 else
 	for ose_major_version in ${OSE_VERSIONS}
 	do
-		for test_dir in $(cd cluster_configs && find * -type d | grep ^test | grep -v test_single && grep -v test_multi_node_basic && cd - > /dev/null)
+		for test_dir in $(cd cluster_configs && find * -type d | grep ^test | grep -v test_single | grep -v test_multi_node_basic && cd - > /dev/null)
 		do
 			if [[ $ose_major_version == '1.4' ]]
 			then
