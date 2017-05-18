@@ -52,7 +52,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.send('''sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf''',note='Switch off fastest mirror - it gives me nothing but grief (looooong waits')
 			shutit.send('rm -fr /var/cache/yum/*')
 			shutit.send('yum clean all')
-			shutit.install('xterm')
 			shutit.install('net-tools')
 			shutit.install('git')
 			# Allow logins via ssh between machines
@@ -120,6 +119,8 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit.install('docker')
 			shutit.insert_text('Environment=GODEBUG=netdns=cgo','/lib/systemd/system/docker.service',pattern='.Service.')
 			shutit.send('mkdir -p /etc/docker',note='Create the docker config folder')
+			# The containers running in the pods take their dns setting from the docker daemon. Add the default kubernetes service ip to the list so that items can be updated.
+			# Ref: IWT-3895
 			shutit.send_file('/etc/docker/daemon.json',"""{
   "dns": ["8.8.8.8"]
 }""",note='Use the google dns server rather than the vagrant one. Change to the value you want if this does not work, eg if google dns is blocked.')
@@ -131,10 +132,14 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.login(command='sudo su - ')
 		# Test json validity in json on server
 		shutit.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
-		shutit.pause_point('')
 		## Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
-		#shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
+		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		#shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
+
+		shutit.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
+		shutit.send_until('oc get pods | grep ^mysql- | grep -v deploy','.*Running.*',cadence=30)
+		shutit.pause_point('')
+		# TODO: exec and check hosts google.com and kubernetes.default.svc.cluster.local 
 
 		# See: IshentRas/cookbook-openshif3 #119
 		shutit.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
