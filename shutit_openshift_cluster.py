@@ -132,12 +132,19 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.login(command='sudo su - ')
 		# Test json validity in json on server
 		shutit.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
-		## Need to resolve this before continuing: https://github.com/IshentRas/cookbook-openshift3/issues/76
 		shutit.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
-		#shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
+		shutit.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
 
 		shutit.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-		shutit.send_until('oc get pods | grep ^mysql- | grep -v deploy','.*Running.*',cadence=30)
+		while True:
+			status = shutit.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+			if status == 'Running':
+				break
+			elif status == 'Error' or status == 'ImagePullBackOff':
+				shutit.send('oc deploy mysql --retry')
+			shutit.send('oc get all | grep mysql')
+			shutit.send('sleep 15')
+			
 		shutit.pause_point('')
 		# TODO: exec and check hosts google.com and kubernetes.default.svc.cluster.local 
 
