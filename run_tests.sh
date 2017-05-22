@@ -19,7 +19,7 @@ fi
 
 if [[ $OSE_VERSIONS = '' ]]
 then
-	OSE_VERSIONS='1.3 1.4'
+	OSE_VERSIONS='1.3 1.4 1.5'
 fi
 
 # 4.0.0 is required by selinux_policy, latest yum is now 5.0.0
@@ -51,9 +51,12 @@ then
 else
 	for ose_major_version in ${OSE_VERSIONS}
 	do
-		for test_dir in $(cd cluster_configs && find * -type d | grep ^test | grep -v test_single | grep -v test_multi_node_basic && cd - > /dev/null)
+		for test_dir in test_multi_node_separate_etcd
 		do
-			if [[ $ose_major_version == '1.4' ]]
+			if [[ $ose_major_version == '1.5' ]]
+			then
+			        ose_version="1.5.1-1.el7"
+			elif [[ $ose_major_version == '1.4' ]]
 			then
 			        ose_version="1.4.1-1.el7"
 			elif [[ $ose_major_version == '1.3' ]]
