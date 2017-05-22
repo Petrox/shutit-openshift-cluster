@@ -140,7 +140,10 @@ class shutit_openshift_cluster(ShutItModule):
 			status = shutit.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
 			if status == 'Running':
 				break
-			elif status == 'Error' or status == 'ImagePullBackOff':
+			elif status == 'Error':
+				shutit.send('oc deploy mysql --retry')
+			elif status == 'ImagePullBackOff':
+				shutit.send('oc deploy mysql --cancel')
 				shutit.send('oc deploy mysql --retry')
 			shutit.send('oc get all | grep mysql')
 			shutit.send('sleep 15')
