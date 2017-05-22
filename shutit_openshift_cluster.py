@@ -144,6 +144,7 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit.send('oc deploy mysql --retry')
 			elif status == 'ImagePullBackOff':
 				shutit.send('oc deploy mysql --cancel')
+				shutit.send('sleep 15')
 				shutit.send('oc deploy mysql --retry')
 			shutit.send('oc get all | grep mysql')
 			shutit.send('sleep 15')
