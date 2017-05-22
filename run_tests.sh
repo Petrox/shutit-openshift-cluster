@@ -53,9 +53,10 @@ else
 	do
 		for test_dir in test_multi_node_separate_etcd
 		do
+			# see http://mirror.centos.org/centos/7/paas/x86_64/openshift-origin/
 			if [[ $ose_major_version == '1.5' ]]
 			then
-			        ose_version="1.5.1-1.el7"
+			        ose_version="1.5.0-1.el7"
 			elif [[ $ose_major_version == '1.4' ]]
 			then
 			        ose_version="1.4.1-1.el7"
