@@ -148,6 +148,9 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit.send('oc deploy mysql --retry')
 			shutit.send('oc get all | grep mysql')
 			shutit.send('sleep 15')
+
+		# Check version is as expected
+		shutit.send_and_get_output('oc version')
 			
 		shutit.pause_point('')
 		# TODO: exec and check hosts google.com and kubernetes.default.svc.cluster.local 
@@ -172,9 +175,9 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.get_config(self.module_id,'chef_compat_resource_cookbook_version',default='latest')
 		shutit.get_config(self.module_id,'chef_version',default='12.16.42-1')
 		shutit.get_config(self.module_id,'pw',default='')
-		shutit.get_config(self.module_id,'ose_major_version',default='1.4')
+		shutit.get_config(self.module_id,'ose_major_version',default='1.5')
 		shutit.get_config(self.module_id,'cookbook_branch',default='master')
-		shutit.get_config(self.module_id,'ose_version',default='1.4.1-1.el7')
+		shutit.get_config(self.module_id,'ose_version',default='1.5.0-1.el7')
 		shutit.get_config(self.module_id,'inject_compat_resource',default=False,boolean=True)
 		shutit.get_config(self.module_id,'memory',default='512')
 		shutit.get_config(self.module_id,'cluster_vm_names',default='shutit_openshift_cluster')
