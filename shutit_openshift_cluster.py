@@ -32,6 +32,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.cfg[self.module_id]['vagrant_run_dir'] = self_dir + '/vagrant_run'
 		run_dir = shutit.cfg[self.module_id]['vagrant_run_dir']
 		module_name = shutit.cfg[self.module_id]['cluster_vm_names'] + '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
+		shutit_sessions = {}
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
 		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
 			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
@@ -46,6 +47,13 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in sorted(test_config_module.machines.keys()):
 			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
+		for machine in sorted(test_config_module.machines.keys()):
+			shutit_sessions.update({machine:shutit.create_session('bash')}
+			shutit_session = shutit_sessions[machine]
+			shutit_session('cd ' + run_dir + '/' + module_name)
+			shutit_session('vagrant ssh ' + machine)
+			print(shutit_session.send_and_get_output('hostname')
+		shutit.pause_point('here')
 		for machine in test_config_module.machines.keys():
 			shutit.login(command='vagrant ssh ' + machine)
 			shutit.login(command='sudo su - ')
