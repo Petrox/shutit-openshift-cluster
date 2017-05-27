@@ -157,10 +157,10 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('mkdir -p /etc/docker',note='Create the docker config folder')
 			# The containers running in the pods take their dns setting from the docker daemon. Add the default kubernetes service ip to the list so that items can be updated.
 			# Ref: IWT-3895
-			shutit_sessions.send_file('/etc/docker/daemon.json',"""{
+			shutit_session.send_file('/etc/docker/daemon.json',"""{
   "dns": ["8.8.8.8"]
 }""",note='Use the google dns server rather than the vagrant one. Change to the value you want if this does not work, eg if google dns is blocked.')
-			shutit.send('systemctl daemon-reload && systemctl restart docker')
+			shutit_session.send('systemctl daemon-reload && systemctl restart docker')
 
 		# CHECK APPS ON MASTER1
 		shutit_session = shutit_sessions['master1']
@@ -181,13 +181,13 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit_session.send('oc deploy mysql --retry')
 			shutit_session.send('oc get all | grep mysql')
 			shutit_session.send('sleep 15')
-
 		# Check version is as expected TODO
 		# TODO: exec and check hosts google.com and kubernetes.default.svc.cluster.local
 		shutit_session.send_and_get_output('oc version')
+		# See: IshentRas/cookbook-openshif3 #119
 		shutit_session.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
 
-		# See: IshentRas/cookbook-openshif3 #119
+		# Tidy up by logging out.	
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.logout()
