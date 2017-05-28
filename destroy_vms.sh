@@ -15,6 +15,9 @@ then
 		fi
 	done
 fi
+# Clean up landrush
+vagrant landrush vms | awk '{print $2}' | egrep '(^master|^etcd)' | sed 's/.*/vagrant landrush rm \0/g' | sh
+
 if [[ $(command -v virsh) != '' ]]
 then
 	if [[ $(kvm-ok 2>&1 | command grep 'can be used') != '' ]]
