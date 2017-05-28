@@ -187,19 +187,20 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit_session.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
 		shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
-		shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-		while True:
-			status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
-			if status == 'Running':
-				break
-			elif status == 'Error':
-				shutit_session.send('oc deploy mysql --retry')
-			elif status == 'ImagePullBackOff':
-				shutit_session.send('oc deploy mysql --cancel')
-				shutit_session.send('sleep 15')
-				shutit_session.send('oc deploy mysql --retry')
-			shutit_session.send('oc get all | grep mysql')
-			shutit_session.send('sleep 15')
+		# Doesn't work with 1.3?
+		#shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
+		#while True:
+		#	status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+		#	if status == 'Running':
+		#		break
+		#	elif status == 'Error':
+		#		shutit_session.send('oc deploy mysql --retry')
+		#	elif status == 'ImagePullBackOff':
+		#		shutit_session.send('oc deploy mysql --cancel')
+		#		shutit_session.send('sleep 15')
+		#		shutit_session.send('oc deploy mysql --retry')
+		#	shutit_session.send('oc get all | grep mysql')
+		#	shutit_session.send('sleep 15')
 		# Check version is as expected TODO
 		# TODO: exec and check hosts google.com and kubernetes.default.svc.cluster.local
 		shutit_session.send_and_get_output('oc version')
