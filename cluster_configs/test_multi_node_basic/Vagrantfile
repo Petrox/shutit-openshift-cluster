@@ -1,4 +1,3 @@
-
 Vagrant.configure("2") do |config|
   config.landrush.enabled = true
   config.vm.provider "virtualbox" do |vb|
@@ -7,7 +6,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider "libvirt" do |vb|
 	vb.memory = "{{ cfg['memory'] }}"
   end
-
+  config.vm.provision "shell", inline: "sudo systemctl restart network 2>/dev/null || true", run: "always"
   config.vm.define "master1" do |master1|
 	master1.vm.box = "{{ vagrant_image }}"
 	master1.vm.hostname = "master1.vagrant.test"
