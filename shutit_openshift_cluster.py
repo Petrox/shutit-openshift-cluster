@@ -40,7 +40,20 @@ class shutit_openshift_cluster(ShutItModule):
 		template = jinja2.Template(file(self_dir + '/cluster_configs/' + shutit.cfg[self.module_id]['test_config_dir'] + '/Vagrantfile').read())
 		shutit.send_file(run_dir + '/' + module_name + '/Vagrantfile',str(template.render(vagrant_image=vagrant_image,cfg=shutit.cfg[self.module_id])))
 		for machine in test_config_module.machines.keys():
-			shutit.multisend('vagrant up --provider ' + shutit.cfg['shutit-library.virtualization.virtualization.virtualization']['virt_method'] + ' ' + machine,{'assword for':pw},timeout=99999)
+			shutit_sessions.update({machine:shutit.create_session('bash')})
+			shutit_session = shutit_sessions[machine]
+			shutit_session.send('cd ' + run_dir + '/' + module_name)
+			# Needs to be done serially for stability reasons.
+			shutit_session.multisend('vagrant up --provider ' + shutit.cfg['shutit-library.virtualization.virtualization.virtualization']['virt_method'] + ' ' + machine,{'assword for':pw})
+
+		for machine in test_config_module.machines.keys():
+			shutit_session = shutit_sessions[machine]
+			# Reload to make sure that landrush picks up the IP. For some reasons it's sometimes not...
+			shutit_session.send('vagrant reload  ' + machine,background=True,wait=False,block_other_commands=False)
+
+		for machine in sorted(test_config_module.machines.keys()):
+			shutit_session = shutit_sessions[machine]
+			shutit_session.wait()
 		###############################################################################
 		# SET UP MACHINES AND START CLUSTER
 		###############################################################################
@@ -48,7 +61,6 @@ class shutit_openshift_cluster(ShutItModule):
 			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
 		for machine in sorted(test_config_module.machines.keys()):
-			shutit_sessions.update({machine:shutit.create_session('bash')})
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('cd ' + run_dir + '/' + module_name)
 			shutit_session.login(command='vagrant ssh ' + machine)
@@ -60,8 +72,15 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('''sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf''',note='Switch off fastest mirror - it gives me nothing but grief (looooong waits')
 			shutit_session.send('rm -fr /var/cache/yum/*')
 			shutit_session.send('yum clean all')
-			#shutit_session.install('net-tools')
+			# Pre-install the pre-installs...
 			shutit_session.install('git',background=True,wait=False,block_other_commands=False)
+			shutit_session.install('libselinux-python',background=True)	
+			shutit_session.install('wget',background=True)
+			shutit_session.install('vim-enhanced',background=True)
+			shutit_session.install('net-tools',background=True)
+			shutit_session.install('bind-utils',background=True)
+			shutit_session.install('bash-completion',background=True)
+			shutit_session.install('dnsmasq',background=True)
 
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
