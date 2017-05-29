@@ -58,7 +58,7 @@ class shutit_openshift_cluster(ShutItModule):
 			test_config_module.machines.get(machine).update({'ip':ip})
 
 		print('IPs:')
-		print(str(test_config_modulei.machines))
+		print(str(test_config_module.machines))
 
 		# Log into the machines
 		for machine in sorted(test_config_module.machines.keys()):
