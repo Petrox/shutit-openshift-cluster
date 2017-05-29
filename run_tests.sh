@@ -33,7 +33,7 @@ if [[ ${QUICK:-0} = '1' ]]
 then
 	echo 'LOG: RUNNING QUICK MODE'
 	$SHUTIT build \
-		-l debug \
+		-l info \
 		--echo -d bash \
 		-m shutit-library/vagrant:shutit-library/virtualbox \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_single_master_embedded_etcd \
@@ -67,7 +67,7 @@ else
 	
 			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_branch:${cookbook_branch}"
 			$SHUTIT build \
-				-l debug \
+				-l info \
 				--echo -d bash \
 				-m shutit-library/vagrant:shutit-library/virtualbox \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       ${test_dir} \
@@ -89,7 +89,7 @@ fi
 ## $WORK-specific
 #$SHUTIT build \
 #	--echo -d bash \
-#	-l debug \
+#	-l info \
 #	-m shutit-library/vagrant:shutit-library/virtualbox \
 #	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_multi_node_separate_etcd \
 #	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.2.1-1.el7 \
