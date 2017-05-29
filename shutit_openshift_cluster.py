@@ -107,6 +107,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
+		shutit.send('vagrant landrush ls #6')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			# Filthy hack to 'override' the node['ipaddress'] value
@@ -118,6 +119,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
+		shutit.send('vagrant landrush ls #7')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('cd /root/chef-solo-example/cookbooks')
@@ -142,6 +144,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
+		shutit.send('vagrant landrush ls #8')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			# Create solo.rb
@@ -153,6 +156,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('echo "*/2 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
 	
+		shutit.send('vagrant landrush ls #9')
 		# CHECKS
 		# 1) CHECK NODES COME UP	
 		shutit.login(command='vagrant ssh master1')
