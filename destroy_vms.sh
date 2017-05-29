@@ -17,7 +17,7 @@ then
 	done
 fi
 # Clean up landrush
-vagrant landrush vms | awk '{print $2}' | egrep '(^master|^etcd)' | sed 's/.*/vagrant landrush rm \0/g' | sh
+vagrant landrush vms | awk '{print $2}' | egrep '(^master|^etcd|^node)' | sed 's/.*/vagrant landrush rm \0/g' | sh
 
 if [[ $(command -v virsh) != '' ]]
 then
