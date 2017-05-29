@@ -7,7 +7,7 @@
   "name": "ocp-cluster-environment",
   "override_attributes": {
     "cookbook-openshift3": {
-      "deploy_dnsmasq": false,
+      "deploy_dnsmasq": true,
       "etcd_servers": [
         {
           "fqdn": "{{ test_config_module.machines['master1']['fqdn'] }}",
