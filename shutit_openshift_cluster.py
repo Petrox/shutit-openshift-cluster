@@ -36,7 +36,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
 		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
 			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
-		shutit.send('vagrant landrush ls')
+		shutit.send('vagrant landrush ls #1')
 		shutit.multisend('vagrant init ' + vagrant_image,{'assword':pw})
 		template = jinja2.Template(file(self_dir + '/cluster_configs/' + shutit.cfg[self.module_id]['test_config_dir'] + '/Vagrantfile').read())
 		shutit.send_file(run_dir + '/' + module_name + '/Vagrantfile',str(template.render(vagrant_image=vagrant_image,cfg=shutit.cfg[self.module_id])))
@@ -56,9 +56,7 @@ class shutit_openshift_cluster(ShutItModule):
 			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
 
-		shutit.send('vagrant landrush ls')
-		print('IPs:')
-		print(str(test_config_module.machines))
+		shutit.send('vagrant landrush ls #2')
 
 		# Log into the machines
 		for machine in sorted(test_config_module.machines.keys()):
@@ -67,6 +65,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.login(command='vagrant ssh ' + machine)
 			shutit_session.login(command='sudo su - ')
 
+		shutit.send('vagrant landrush ls #3')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('echo root:origin | /usr/sbin/chpasswd',note='set root password')
@@ -80,6 +79,8 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
+		shutit.send('vagrant landrush ls #4')
+
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
@@ -89,6 +90,8 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
+
+		shutit.send('vagrant landrush ls #5')
 
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
