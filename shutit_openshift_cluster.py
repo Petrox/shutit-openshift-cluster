@@ -36,6 +36,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
 		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
 			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
+		shutit.send('vagrant landrush ls')
 		shutit.multisend('vagrant init ' + vagrant_image,{'assword':pw})
 		template = jinja2.Template(file(self_dir + '/cluster_configs/' + shutit.cfg[self.module_id]['test_config_dir'] + '/Vagrantfile').read())
 		shutit.send_file(run_dir + '/' + module_name + '/Vagrantfile',str(template.render(vagrant_image=vagrant_image,cfg=shutit.cfg[self.module_id])))
@@ -47,8 +48,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.multisend('vagrant up --provider ' + shutit.cfg['shutit-library.virtualization.virtualization.virtualization']['virt_method'] + ' ' + machine,{'assword for':pw})
 			# Reload to make sure that landrush picks up the IP. For some reasons it's sometimes not...
 
-		shutit.send('sleep 60')
-		shutit.send('vagrant reload  ' + machine)
 
 		###############################################################################
 		# SET UP MACHINES AND START CLUSTER
@@ -57,6 +56,7 @@ class shutit_openshift_cluster(ShutItModule):
 			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
 
+		shutit.send('vagrant landrush ls')
 		print('IPs:')
 		print(str(test_config_module.machines))
 
@@ -204,6 +204,8 @@ class shutit_openshift_cluster(ShutItModule):
 		# Tidy up by logging out.	
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
+			# Be cleaner wrt landrush by shutting down.
+			shutit_session.send('shutdown -h now')
 			shutit_session.logout()
 			shutit_session.logout()
 		return True
