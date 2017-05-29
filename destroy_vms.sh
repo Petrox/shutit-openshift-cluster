@@ -1,5 +1,6 @@
 #!/bin/bash
 rm -rf vagrant_run/*
+vagrant global-status --prune
 if [[ $(command -v VBoxManage) != '' ]]
 then
 	while true
