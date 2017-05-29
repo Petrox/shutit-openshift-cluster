@@ -46,7 +46,9 @@ class shutit_openshift_cluster(ShutItModule):
 			# Needs to be done serially for stability reasons.
 			shutit_session.multisend('vagrant up --provider ' + shutit.cfg['shutit-library.virtualization.virtualization.virtualization']['virt_method'] + ' ' + machine,{'assword for':pw})
 			# Reload to make sure that landrush picks up the IP. For some reasons it's sometimes not...
-			shutit_session.send('vagrant reload  ' + machine)
+
+		shutit.send('sleep 60')
+		shutit.send('vagrant reload  ' + machine)
 
 		###############################################################################
 		# SET UP MACHINES AND START CLUSTER
@@ -56,7 +58,7 @@ class shutit_openshift_cluster(ShutItModule):
 			test_config_module.machines.get(machine).update({'ip':ip})
 
 		print('IPs:')
-		print(str(test_config_module))
+		print(str(test_config_modulei.machines))
 
 		# Log into the machines
 		for machine in sorted(test_config_module.machines.keys()):
