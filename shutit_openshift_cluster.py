@@ -45,21 +45,20 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('cd ' + run_dir + '/' + module_name)
 			# Needs to be done serially for stability reasons.
 			shutit_session.multisend('vagrant up --provider ' + shutit.cfg['shutit-library.virtualization.virtualization.virtualization']['virt_method'] + ' ' + machine,{'assword for':pw})
-
-		for machine in test_config_module.machines.keys():
-			shutit_session = shutit_sessions[machine]
 			# Reload to make sure that landrush picks up the IP. For some reasons it's sometimes not...
-			shutit_session.send('vagrant reload  ' + machine,background=True,wait=False,block_other_commands=False)
+			shutit_session.send('vagrant reload  ' + machine)
 
-		for machine in sorted(test_config_module.machines.keys()):
-			shutit_session = shutit_sessions[machine]
-			shutit_session.wait()
 		###############################################################################
 		# SET UP MACHINES AND START CLUSTER
 		###############################################################################
 		for machine in sorted(test_config_module.machines.keys()):
 			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
+
+		print('IPs:')
+		print(str(test_config_module))
+
+		# Log into the machines
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('cd ' + run_dir + '/' + module_name)
@@ -73,14 +72,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('rm -fr /var/cache/yum/*')
 			shutit_session.send('yum clean all')
 			# Pre-install the pre-installs...
-			shutit_session.install('git',background=True,wait=False,block_other_commands=False)
-			shutit_session.install('libselinux-python',background=True)	
-			shutit_session.install('wget',background=True)
-			shutit_session.install('vim-enhanced',background=True)
-			shutit_session.install('net-tools',background=True)
-			shutit_session.install('bind-utils',background=True)
-			shutit_session.install('bash-completion',background=True)
-			shutit_session.install('dnsmasq',background=True)
+			shutit_session.send('yum install -y git libselinux-python wget vim-enhanced net-tools bind-utils bash-completion dnsmasq',background=True,wait=False,block_other_commands=False)
 
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
