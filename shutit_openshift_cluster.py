@@ -219,6 +219,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			# Be cleaner wrt landrush by shutting down.
 			#shutit_session.send('shutdown -h now',fire_and_forget=True)
+		shutit.send('vagrant halt')
 		shutit.send('vagrant destroy -f')
 		return True
 
