@@ -218,9 +218,7 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			# Be cleaner wrt landrush by shutting down.
-			shutit_session.send('shutdown -h now')
-			shutit_session.logout()
-			shutit_session.logout()
+			shutit_session.send('shutdown -h now',fire_and_forget=True)
 		return True
 
 
