@@ -156,7 +156,7 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('echo "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
 		# Switch off iptables until the certs are downloaded ok
-		shutit_sessions['master1'].send('echo "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb; service iptables stop >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
+		shutit_sessions['master1'].send(r'echo -e "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1\n* * * * * systemctl stop iptables" | crontab',note='set up crontab on ' + machine)
 
 	
 		shutit.send('vagrant landrush ls #9')
