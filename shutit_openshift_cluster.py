@@ -142,10 +142,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Create environment file')
 			shutit_session.send('echo "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
-		# Switch off iptables until the certs are downloaded ok
-		#shutit_sessions['master1'].send(r'echo -e "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1\n* * * * * systemctl stop iptables" | crontab',note='set up crontab on ' + machine)
-
-	
 		# CHECKS
 		# 1) CHECK NODES COME UP	
 		shutit.login(command='vagrant ssh master1')
@@ -156,9 +152,6 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit.send_until('oc get nodes',machine + '.* Ready.*',cadence=60,note='Wait until oc get all returns OK')
 		shutit.logout()
 		shutit.logout()
-
-		# Switch on iptables now the certs are downloaded ok
-		#shutit_sessions['master1'].send('echo "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb; service iptables stop >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
 		# CONFIGURE DOCKER TO WORK
 		for machine in sorted(test_config_module.machines.keys()):
@@ -174,31 +167,42 @@ class shutit_openshift_cluster(ShutItModule):
 }""",note='Use the google dns server rather than the vagrant one. Change to the value you want if this does not work, eg if google dns is blocked.')
 			shutit_session.send('systemctl daemon-reload && systemctl restart docker')
 
+		################################################################################
+		# TESTS
+		################################################################################
 		# CHECK APPS ON MASTER1
 		shutit_session = shutit_sessions['master1']
 		# Test json validity in json on server
 		shutit_session.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
 		shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
-		# Doesn't work with 1.3?
-		#shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-		#while True:
-		#	status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
-		#	if status == 'Running':
-		#		break
-		#	elif status == 'Error':
-		#		shutit_session.send('oc deploy mysql --retry')
-		#	elif status == 'ImagePullBackOff':
-		#		shutit_session.send('oc deploy mysql --cancel')
-		#		shutit_session.send('sleep 15')
-		#		shutit_session.send('oc deploy mysql --retry')
-		#	shutit_session.send('oc get all | grep mysql')
-		#	shutit_session.send('sleep 15')
+		shutit.pause_point('mysql')
+		# Create a mysql application
+		shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
+		while True:
+			status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+			if status == 'Running':
+				break
+			elif status == 'Error':
+				shutit_session.send('oc deploy mysql --retry')
+			elif status == 'ImagePullBackOff':
+				shutit_session.send('oc deploy mysql --cancel')
+				shutit_session.send('sleep 15')
+				shutit_session.send('oc deploy mysql --retry')
+			shutit_session.send('oc get all | grep mysql')
+			shutit_session.send('sleep 15')
 		# Check version is as expected TODO
-		# TODO: exec and check hosts google.com and kubernetes.default.svc.cluster.local
 		shutit_session.send_and_get_output('oc version')
+		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
+		shutit_session.login("""oc exec -ti $(oc get pods | grep mysql | awk '{print $1}' bash""")
+		shutit_session.send('ping -c1 google.com')
+		if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
+			shutit_session.fail('kubernetes.default.svc.cluster.local did not resolve correctly')
+		shutit_session.logout()
+
 		# See: IshentRas/cookbook-openshif3 #119
 		shutit_session.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
+		################################################################################
 
 		# Tidy up by logging out.	
 		for machine in sorted(test_config_module.machines.keys()):
