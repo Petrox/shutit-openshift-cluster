@@ -36,7 +36,6 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.send('command rm -rf ' + run_dir + '/' + module_name + ' && command mkdir -p ' + run_dir + '/' + module_name + ' && command cd ' + run_dir + '/' + module_name)
 		if shutit.send_and_get_output('vagrant plugin list | grep landrush') == '':
 			shutit.multisend('vagrant plugin install landrush',{'assword':pw})
-		shutit.send('vagrant landrush ls #1')
 		shutit.multisend('vagrant init ' + vagrant_image,{'assword':pw})
 		template = jinja2.Template(file(self_dir + '/cluster_configs/' + shutit.cfg[self.module_id]['test_config_dir'] + '/Vagrantfile').read())
 		shutit.send_file(run_dir + '/' + module_name + '/Vagrantfile',str(template.render(vagrant_image=vagrant_image,cfg=shutit.cfg[self.module_id])))
@@ -46,8 +45,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.send('cd ' + run_dir + '/' + module_name)
 			# Needs to be done serially for stability reasons.
 			shutit_session.multisend('vagrant up --provider ' + shutit.cfg['shutit-library.virtualization.virtualization.virtualization']['virt_method'] + ' ' + machine,{'assword for':pw})
-			# Reload to make sure that landrush picks up the IP. For some reasons it's sometimes not...
-
 
 		###############################################################################
 		# SET UP MACHINES AND START CLUSTER
@@ -56,8 +53,6 @@ class shutit_openshift_cluster(ShutItModule):
 			ip = shutit.send_and_get_output('''vagrant landrush ls 2> /dev/null | grep -w ^''' + test_config_module.machines[machine]['fqdn'] + ''' | awk '{print $2}' ''')
 			test_config_module.machines.get(machine).update({'ip':ip})
 
-		shutit.send('vagrant landrush ls #2')
-
 		# Log into the machines
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
@@ -65,7 +60,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session.login(command='vagrant ssh ' + machine)
 			shutit_session.login(command='sudo su - ')
 
-		shutit.send('vagrant landrush ls #3')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('echo root:origin | /usr/sbin/chpasswd',note='set root password')
@@ -79,8 +73,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
-		shutit.send('vagrant landrush ls #4')
-
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('mkdir -p /root/chef-solo-example /root/chef-solo-example/cookbooks /root/chef-solo-example/environments /root/chef-solo-example/logs',note='Create chef folders')
@@ -90,8 +82,6 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
-
-		shutit.send('vagrant landrush ls #5')
 
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
@@ -107,7 +97,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
-		shutit.send('vagrant landrush ls #6')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			# Filthy hack to 'override' the node['ipaddress'] value
@@ -119,7 +108,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
-		shutit.send('vagrant landrush ls #7')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('cd /root/chef-solo-example/cookbooks')
@@ -144,7 +132,6 @@ class shutit_openshift_cluster(ShutItModule):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.wait()
 
-		shutit.send('vagrant landrush ls #8')
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			# Create solo.rb
@@ -153,13 +140,12 @@ class shutit_openshift_cluster(ShutItModule):
 			# Create environment file
 			template = jinja2.Template(file(self_dir + '/cluster_configs/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment.json').read())
 			shutit_session.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Create environment file')
-			shutit_session.send('echo "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
+			shutit_session.send('echo "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
 		# Switch off iptables until the certs are downloaded ok
-		shutit_sessions['master1'].send(r'echo -e "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1\n* * * * * systemctl stop iptables" | crontab',note='set up crontab on ' + machine)
+		#shutit_sessions['master1'].send(r'echo -e "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1\n* * * * * systemctl stop iptables" | crontab',note='set up crontab on ' + machine)
 
 	
-		shutit.send('vagrant landrush ls #9')
 		# CHECKS
 		# 1) CHECK NODES COME UP	
 		shutit.login(command='vagrant ssh master1')
@@ -172,7 +158,7 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit.logout()
 
 		# Switch on iptables now the certs are downloaded ok
-		shutit_sessions['master1'].send('echo "*/5 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb; service iptables stop >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
+		#shutit_sessions['master1'].send('echo "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb; service iptables stop >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
 		# CONFIGURE DOCKER TO WORK
 		for machine in sorted(test_config_module.machines.keys()):
@@ -218,7 +204,8 @@ class shutit_openshift_cluster(ShutItModule):
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			# Be cleaner wrt landrush by shutting down.
-			#shutit_session.send('shutdown -h now',fire_and_forget=True)
+			shutit_session.send('shutdown -h +1')
+		shutit.send('sleep 60')
 		shutit.send('vagrant halt')
 		shutit.send('vagrant destroy -f')
 		return True
