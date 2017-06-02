@@ -176,7 +176,6 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit_session.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
 		shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
-		shutit.pause_point('mysql')
 		# Create a mysql application
 		shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
 		while True:
@@ -194,7 +193,7 @@ class shutit_openshift_cluster(ShutItModule):
 		# Check version is as expected TODO
 		shutit_session.send_and_get_output('oc version')
 		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
-		shutit_session.login("""oc exec -ti $(oc get pods | grep mysql | awk '{print $1}' bash""")
+		shutit_session.login("""oc exec -ti $(oc get pods | grep mysql | awk '{print $1}') bash""")
 		shutit_session.send('ping -c1 google.com')
 		if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
 			shutit_session.fail('kubernetes.default.svc.cluster.local did not resolve correctly')
@@ -203,6 +202,8 @@ class shutit_openshift_cluster(ShutItModule):
 		# See: IshentRas/cookbook-openshif3 #119
 		shutit_session.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
 		################################################################################
+
+		shutit.pause_point('lose first master')
 
 		# Tidy up by logging out.	
 		for machine in sorted(test_config_module.machines.keys()):
