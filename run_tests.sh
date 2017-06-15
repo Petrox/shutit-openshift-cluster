@@ -33,8 +33,9 @@ if [[ ${QUICK:-0} = '1' ]]
 then
 	echo 'LOG: RUNNING QUICK MODE'
 	$SHUTIT build \
-		-l info \
-		--echo -d bash \
+		-l debug \
+		--echo \
+		-d bash \
 		-m shutit-library/vagrant:shutit-library/virtualbox \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_single_master_embedded_etcd \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.4.1-1.el7 \
@@ -67,8 +68,9 @@ else
 	
 			echo "LOG: RUNNING test_dir:${test_dir} ose_version:${ose_version} ose_major_version:${ose_major_version} cookbook_branch:${cookbook_branch}"
 			$SHUTIT build \
-				-l info \
-				--echo -d bash \
+				-l debug \
+				--echo \
+				-d bash \
 				-m shutit-library/vagrant:shutit-library/virtualbox \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       ${test_dir} \
 				-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           ${ose_version} \
@@ -85,21 +87,3 @@ else
 		done
 	done
 fi
-
-## $WORK-specific
-#$SHUTIT build \
-#	--echo -d bash \
-#	-l info \
-#	-m shutit-library/vagrant:shutit-library/virtualbox \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_multi_node_separate_etcd \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.2.1-1.el7 \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.2 \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       master \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_yum_cookbook_version             3.6.1 \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_iptables_cookbook_version        1.0.0 \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_selinux_policy_cookbook_version  0.7.2 \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_compat_resource_cookbook_version latest \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster chef_version                          12.4.1-1 \
-#	-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster inject_compat_resource                true \
-#    "$@"
-#./destroy_vms.sh
