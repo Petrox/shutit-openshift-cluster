@@ -192,7 +192,7 @@ class shutit_openshift_cluster(ShutItModule):
 		# Check version is as expected TODO
 		shutit_session.send_and_get_output('oc version')
 		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
-		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | awk '{print $1}'""")
+		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
 		shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
 		shutit_session.send('ping -c1 google.com')
 		# problem with shutit
