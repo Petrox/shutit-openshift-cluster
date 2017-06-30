@@ -195,8 +195,9 @@ class shutit_openshift_cluster(ShutItModule):
 		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
 		shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
 		shutit_session.send('ping -c1 google.com')
-		# problem with shutit
-		#shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
+		shutit.send('stty -a')
+		if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
+			shutit_session.fail('kubernetes.default.svc.cluster.local did not resolve correctly')
 		shutit_session.logout()
 
 		# See: IshentRas/cookbook-openshif3 #119
