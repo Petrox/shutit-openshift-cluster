@@ -187,7 +187,7 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit_session.send('oc deploy mysql --cancel')
 				shutit_session.send('sleep 15')
 				shutit_session.send('oc deploy mysql --retry')
-			shutit_session.send('oc get all | grep mysql')
+			shutit_session.send('oc get all | grep mysql',check_exit=False)
 			shutit_session.send('sleep 15')
 		# Check version is as expected TODO
 		shutit_session.send_and_get_output('oc version')
