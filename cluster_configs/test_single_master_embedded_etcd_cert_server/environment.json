@@ -7,12 +7,10 @@
   "default_attributes": {},
   "override_attributes": {
     "cookbook-openshift3": {
-      "certificate_server": [
-        {
-          "fqdn": "{{ test_config_module.machines['certserver']['fqdn'] }}",
-          "ipaddress": "{{ test_config_module.machines['certserver']['ip'] }}"
-        }
-      ],
+      "certificate_server": {
+        "fqdn": "{{ test_config_module.machines['certserver']['fqdn'] }}",
+        "ipaddress": "{{ test_config_module.machines['certserver']['ip'] }}"
+      },
       "deploy_dnsmasq": true,
       "master_servers": [
         {

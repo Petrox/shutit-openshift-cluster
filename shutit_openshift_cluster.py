@@ -204,6 +204,8 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit_session.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
 		################################################################################
 
+		shutit.pause_point('cert')
+
 		# Tidy up by logging out.	
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
