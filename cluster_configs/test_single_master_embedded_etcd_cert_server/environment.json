@@ -35,6 +35,7 @@
       "openshift_deployment_type": "origin",
       "openshift_hosted_managed_router": false,
       "openshift_hosted_managed_registry": false,
+      "openshift_master_api_url": "https://{{ test_config_module.machines['master1']['fqdn'] }}:8443",
       "ose_major_version": "{{ cfg['ose_major_version'] }}",
       "ose_version": "{{ cfg['ose_version'] }}"
     }
