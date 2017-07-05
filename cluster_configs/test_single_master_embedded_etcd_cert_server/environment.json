@@ -30,6 +30,7 @@
           "labels": "region=user"
         }
       ],
+      "openshift_common_api_hostname": "{{ test_config_module.machines['master1']['fqdn'] }}",
       "openshift_deployment_type": "origin",
       "openshift_hosted_managed_router": false,
       "openshift_hosted_managed_registry": false,
