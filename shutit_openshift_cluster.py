@@ -176,29 +176,29 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
 		# TODO: issues with mysql creation
-		## Create a mysql application
-		#shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-		#while True:
-		#	status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
-		#	if status == 'Running':
-		#		break
-		#	elif status == 'Error':
-		#		shutit_session.send('oc deploy mysql --retry')
-		#	elif status == 'ImagePullBackOff':
-		#		shutit_session.send('oc deploy mysql --cancel')
-		#		shutit_session.send('sleep 15')
-		#		shutit_session.send('oc deploy mysql --retry')
-		#	shutit_session.send('oc get all | grep mysql',check_exit=False)
-		#	shutit_session.send('sleep 15')
-		#podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
-		#shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
+		# Create a mysql application
+		shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
+		while True:
+			status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+			if status == 'Running':
+				break
+			elif status == 'Error':
+				shutit_session.send('oc deploy mysql --retry')
+			elif status == 'ImagePullBackOff':
+				shutit_session.send('oc deploy mysql --cancel')
+				shutit_session.send('sleep 15')
+				shutit_session.send('oc deploy mysql --retry')
+			shutit_session.send('oc get all | grep mysql',check_exit=False)
+			shutit_session.send('sleep 15')
+		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
+		shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
 		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
-		#if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
-		#	shutit_session.pause_point('kubernetes.default.svc.cluster.local did not resolve correctly')
-		#shutit_session.send('ping -c1 google.com')
-		#shutit_session.logout()
-		# Check version is as expected TODO
+		if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
+			shutit_session.pause_point('kubernetes.default.svc.cluster.local did not resolve correctly')
+		shutit_session.send('ping -c1 google.com')
+		shutit_session.logout()
 		shutit_session.send_and_get_output('oc version')
+		# Check version is as expected TODO
 
 		# See: IshentRas/cookbook-openshif3 #119
 		shutit_session.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
