@@ -192,13 +192,13 @@ class shutit_openshift_cluster(ShutItModule):
 		#	shutit_session.send('sleep 15')
 		#podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
 		#shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
+		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
+		#if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
+		#	shutit_session.pause_point('kubernetes.default.svc.cluster.local did not resolve correctly')
+		#shutit_session.send('ping -c1 google.com')
+		#shutit_session.logout()
 		# Check version is as expected TODO
 		shutit_session.send_and_get_output('oc version')
-		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
-		if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
-			shutit_session.pause_point('kubernetes.default.svc.cluster.local did not resolve correctly')
-		shutit_session.send('ping -c1 google.com')
-		shutit_session.logout()
 
 		# See: IshentRas/cookbook-openshif3 #119
 		shutit_session.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
