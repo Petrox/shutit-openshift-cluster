@@ -182,7 +182,6 @@ class shutit_openshift_cluster(ShutItModule):
 		ok = False
 		while count > 0:
 			shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-			shutit.pause_point('')
 			while True:
 				count -= 1
 				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
@@ -199,7 +198,7 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit_session.send('sleep 15')
 			if ok:
 				break
-		
+			shutit.send('oc delete svc mysql && oc delete  dc mysql')
 		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
 		shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
 		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
