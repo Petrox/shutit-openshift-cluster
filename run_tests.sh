@@ -58,7 +58,7 @@ then
 		--echo \
 		-d bash \
 		-m shutit-library/vagrant:shutit-library/virtualbox \
-		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_single_master_embedded_etcd_cert_server \
+		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster test_config_dir                       test_multi_node_basic_cert_server \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_version                           1.4.1-1.el7 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster ose_major_version                     1.4 \
 		-s tk.shutit.shutit_openshift_cluster.shutit_openshift_cluster cookbook_branch                       ${cookbook_branch} \

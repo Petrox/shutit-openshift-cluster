@@ -140,7 +140,7 @@ class shutit_openshift_cluster(ShutItModule):
 			# Create environment file
 			template = jinja2.Template(file(self_dir + '/cluster_configs/' + shutit.cfg[self.module_id]['test_config_dir'] + '/environment.json').read())
 			shutit_session.send_file('/root/chef-solo-example/environments/ocp-cluster-environment.json',str(template.render(test_config_module=test_config_module,cfg=shutit.cfg[self.module_id])),note='Create environment file')
-			shutit_session.send('echo "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
+			shutit_session.send('echo "*/3 * * * * chef-solo --environment ocp-cluster-environment -o recipe[cookbook-openshift3] -c ~/chef-solo-example/solo.rb -l debug >> /root/chef-solo-example/logs/chef.log 2>&1" | crontab',note='set up crontab on ' + machine)
 
 		# CHECKS
 		# 1) CHECK NODES COME UP	
@@ -175,37 +175,46 @@ class shutit_openshift_cluster(ShutItModule):
 		# Test json validity in json on server
 		shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
+		# TODO: issues with mysql creation
 		# Create a mysql application
-		shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-		while True:
-			status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
-			if status == 'Running':
-				break
-			elif status == 'Error':
-				shutit_session.send('oc deploy mysql --retry')
-			elif status == 'ImagePullBackOff':
-				shutit_session.send('oc deploy mysql --cancel')
+
+		count = 120
+		ok = False
+		while count > 0:
+			shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
+			while True:
+				count -= 1
+				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+				if status == 'Running':
+					ok = True
+					break
+				elif status == 'Error':
+					break
+				elif status == 'ImagePullBackOff':
+					shutit_session.send('oc deploy mysql --cancel')
+					shutit_session.send('sleep 15')
+					shutit_session.send('oc deploy mysql --retry')
+				shutit_session.send('oc get all | grep mysql',check_exit=False)
 				shutit_session.send('sleep 15')
-				shutit_session.send('oc deploy mysql --retry')
-			shutit_session.send('oc get all | grep mysql',check_exit=False)
-			shutit_session.send('sleep 15')
-		# Check version is as expected TODO
-		shutit_session.send_and_get_output('oc version')
-		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
+			if ok:
+				break
+			shutit.send('oc delete svc mysql && oc delete  dc mysql')
 		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
 		shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
-		shutit_session.send('ping -c1 google.com')
-		shutit.send('stty -a')
+		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
 		if shutit_session.send_and_get_output('resolveip kubernetes.default.svc.cluster.local -s') != '172.30.0.1':
-			shutit_session.fail('kubernetes.default.svc.cluster.local did not resolve correctly')
+			shutit_session.pause_point('kubernetes.default.svc.cluster.local did not resolve correctly')
+		shutit_session.send('ping -c1 google.com')
 		shutit_session.logout()
+		shutit_session.send_and_get_output('oc version')
+		# Check version is as expected TODO
 
 		# See: IshentRas/cookbook-openshif3 #119
 		shutit_session.send("""/bin/bash -c 'set -xe ; for ip in $(oc get endpoints kubernetes -n default -o jsonpath="{.subsets[*].addresses[*].ip}"); do echo curl --fail -s -o/dev/null --cacert /etc/origin/node/ca.crt https://${ip}:8443 ; done'""")
 		shutit_session.send(r"""find / | grep json$ | sed 's/.*/echo \0 \&\& cat \0 | python -m json.tool > \/dev\/null/'  | sh""")
 		################################################################################
 
-		shutit.pause_point('dnsmasq enable')
+		shutit.pause_point('cert')
 
 		# Tidy up by logging out.	
 		for machine in sorted(test_config_module.machines.keys()):
