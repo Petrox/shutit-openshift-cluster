@@ -177,19 +177,29 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
 		# TODO: issues with mysql creation
 		# Create a mysql application
-		shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-		while True:
-			status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
-			if status == 'Running':
-				break
-			elif status == 'Error':
-				shutit_session.send('oc deploy mysql --retry')
-			elif status == 'ImagePullBackOff':
-				shutit_session.send('oc deploy mysql --cancel')
+
+		count = 120
+		ok = False
+		while count > 0:
+			shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
+			shutit.pause_point('')
+			while True:
+				count -= 1
+				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+				if status == 'Running':
+					ok = True
+					break
+				elif status == 'Error':
+					break
+				elif status == 'ImagePullBackOff':
+					shutit_session.send('oc deploy mysql --cancel')
+					shutit_session.send('sleep 15')
+					shutit_session.send('oc deploy mysql --retry')
+				shutit_session.send('oc get all | grep mysql',check_exit=False)
 				shutit_session.send('sleep 15')
-				shutit_session.send('oc deploy mysql --retry')
-			shutit_session.send('oc get all | grep mysql',check_exit=False)
-			shutit_session.send('sleep 15')
+			if ok:
+				break
+		
 		podname = shutit_session.send_and_get_output("""oc get pods | grep mysql | grep -v deploy | awk '{print $1}' | tail -1""")
 		shutit_session.login(command="""oc exec -ti """ + podname + """ bash""")
 		# exec and check hosts google.com and kubernetes.default.svc.cluster.local
