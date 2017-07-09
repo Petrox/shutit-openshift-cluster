@@ -180,9 +180,9 @@ class shutit_openshift_cluster(ShutItModule):
 
 		count = 120
 		ok = False
-		while count > 0:
+		while True:
 			shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-			while True:
+			while count > 0:
 				count -= 1
 				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
 				if status == 'Running':
