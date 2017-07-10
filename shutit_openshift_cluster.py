@@ -177,12 +177,13 @@ class shutit_openshift_cluster(ShutItModule):
 		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
 		# TODO: issues with mysql creation
 		# Create a mysql application
-
-		count = 120
-		ok = False
 		while True:
+			ok = False
+			count = 120
 			shutit_session.send('oc new-app -e=MYSQL_ROOT_PASSWORD=root mysql')
-			while count > 0:
+			while True:
+				if count == 0:
+					break
 				count -= 1
 				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
 				if status == 'Running':
