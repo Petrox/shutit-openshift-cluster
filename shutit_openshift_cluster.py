@@ -173,8 +173,10 @@ class shutit_openshift_cluster(ShutItModule):
 		# CHECK APPS ON MASTER1
 		shutit_session = shutit_sessions['master1']
 		# Test json validity in json on server
-		shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30)
-		shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30)
+		while not shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30,retries=20):
+			shutit.send('oc deploy router --retry')
+		while not shutit_session.send_until('oc get pods | grep ^docker-registry- | grep -v deploy','.*Running.*',cadence=30,retries=20):
+			shutit.send('oc deploy docker-registry --retry')
 		# TODO: issues with mysql creation
 		# Create a mysql application
 		while True:
