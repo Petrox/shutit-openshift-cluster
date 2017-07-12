@@ -187,7 +187,8 @@ class shutit_openshift_cluster(ShutItModule):
 				if count == 0:
 					break
 				count -= 1
-				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}'""")
+				# Sometimes terminating containers don't go away quickly.
+				status = shutit_session.send_and_get_output("""oc get pods | grep ^mysql- | grep -v deploy | awk '{print $3}' | grep -v Terminating""")
 				if status == 'Running':
 					ok = True
 					break
