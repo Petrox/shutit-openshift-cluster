@@ -127,6 +127,7 @@ class shutit_openshift_cluster(ShutItModule):
 				shutit_session.send('curl -L https://supermarket.chef.io/cookbooks/compat_resource/download | tar -zxvf -',note='Get cookbook dependencies',background=True,wait=False,block_other_commands=False)
 			else:
 				shutit_session.send('curl -L https://supermarket.chef.io/cookbooks/compat_resource/versions/'+ shutit.cfg[self.module_id]['chef_compat_resource_cookbook_version'] + '/download | tar -zxvf -',note='Get cookbook dependencies',background=True,wait=False,block_other_commands=False)
+			shutit_session.send('/bin/false',note='Slip in a failure',background=True,wait=False,block_other_commands=False)
 
 		for machine in sorted(test_config_module.machines.keys()):
 			shutit_session = shutit_sessions[machine]
@@ -172,6 +173,7 @@ class shutit_openshift_cluster(ShutItModule):
 		################################################################################
 		# CHECK APPS ON MASTER1
 		shutit_session = shutit_sessions['master1']
+		shutit_session.pause_point('chef-shell')
 		# Test json validity in json on server
 		while not shutit_session.send_until('oc get pods | grep ^router- | grep -v deploy','.*Running.*',cadence=30,retries=20):
 			shutit_session.send('oc deploy router --retry')
